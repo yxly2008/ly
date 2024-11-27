@@ -1,0 +1,23 @@
+server:
+  port: 8080
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: pong_route
+          uri: http://localhost:8082
+          predicates:
+            - Path=/pong
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@pathKeyResolver}"
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 1
+  redis:
+    host: 192.168.163.139
+    port: 6379
+
+logging:
+  level:
+    root: DEBUG

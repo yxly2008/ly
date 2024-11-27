@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="info" monitorInterval="10">
+
+    <properties>
+        <property name="LOG_HOME">/var/log/ping-pong</property>
+        <Property name="FILE_NAME" value="practisesvr"/>
+        <Property name="LOG_PATTERN"
+                  value="[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%thread] [%file:%line] → [%m]%n"/>
+        <!--        <Property name="LOG_PATTERN" value="[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%thread] [%file:%line] → [%enc{%m}{CRLF}]%n"/>-->
+        <!--        <Property name="LOG_PATTERN" value="[%d{yyyy-MM-dd HH:mm:ss.SSSSSS}] [%-5p] [%thread] [%file:%line] → [%replace{%enc{%m}{CRLF}}{\\r|\\n|%0D|%0A|%0a|%0d}{}]%n"/>-->
+    </properties>
+
+    <appenders>
+        <console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Filters>
+                <ThresholdFilter level="error" onMatch="DENY"
+                                 onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="info" onMatch="ACCEPT"
+                                 onMismatch="DENY"/>
+                <ThresholdFilter level="debug" onMatch="ACCEPT"
+                                 onMismatch="DENY"/>
+            </Filters>
+        </console>
+
+        <File name="LOG_FILE"
+              fileName="${LOG_HOME}/appendLog.log"
+              append="true">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+
+        <RollingFile name="api_json"
+                     fileName="${LOG_HOME}/${FILE_NAME}.log"
+                     filePattern="${LOG_HOME}/${FILE_NAME}_%d{yyyy-MM-dd-HH}_%i.log.gz"
+                     createOnDemand="true">
+            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="100K"/>
+            </Policies>
+            <DefaultRolloverStrategy fileIndex="nomax">
+                <Delete basePath="${LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="*.log.gz">
+                        <IfAny>
+                            <IfAccumulatedFileSize exceeds="100M"/>
+                            <IfAccumulatedFileCount exceeds="100"/>
+                            <IfLastModified age="30d"/>
+                        </IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <RollingFile name="storage_check"
+                     fileName="${LOG_HOME}/storage_check.log"
+                     filePattern="${LOG_HOME}/storage_check_%d{yyyy-MM-dd-HH}_%i.log.gz"
+                     createOnDemand="true">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="1M"/>
+            </Policies>
+            <DefaultRolloverStrategy fileIndex="nomax">
+                <Delete basePath="${LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="*.log.gz">
+                        <IfAny>
+                            <IfAccumulatedFileSize exceeds="10M"/>
+                            <IfAccumulatedFileCount exceeds="100"/>
+                            <IfLastModified age="30d"/>
+                        </IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </appenders>
+
+    <loggers>
+        <root level="all">
+            <AppenderRef ref="CONSOLE"/>
+            <!--<AppenderRef ref="LOG_FILE"/>-->
+        </root>
+
+        <logger name="com.ly.log.logUtils" level="info" additivity="false">
+            <AppenderRef ref="CONSOLE"/>
+            <AppenderRef ref="api_json"/>
+        </logger>
+        <logger name="com.ly.task.StorageHealthyCheckTask" level="info"
+                additivity="false">
+            <AppenderRef ref="CONSOLE"/>
+            <AppenderRef ref="storage_check"/>
+        </logger>
+    </loggers>
+</configuration>

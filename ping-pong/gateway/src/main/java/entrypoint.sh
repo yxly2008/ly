@@ -1,0 +1,1 @@
+java -jar gateway-1.0-SNAPSHOT.jar --spring.config.location=application.yml
